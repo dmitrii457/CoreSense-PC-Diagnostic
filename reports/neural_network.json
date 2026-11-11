@@ -1,0 +1,119 @@
+{
+  "model": "neural_network",
+  "dataset_sha256": "96312c1eb5beb164db00402907f46f1169909a0b73da73c0108bbd128001a4c3",
+  "split": "GroupShuffleSplit by symptom vector, seed=42, test_size=0.25",
+  "train_rows": 357,
+  "test_rows": 243,
+  "overlapping_feature_vectors": 0,
+  "accuracy": 0.8724279835390947,
+  "classification_report": {
+    "audio_problem": {
+      "precision": 0.9655172413793104,
+      "recall": 0.8484848484848485,
+      "f1-score": 0.9032258064516129,
+      "support": 66.0
+    },
+    "cooling_problem": {
+      "precision": 0.9622641509433962,
+      "recall": 0.9622641509433962,
+      "f1-score": 0.9622641509433962,
+      "support": 53.0
+    },
+    "network_problem": {
+      "precision": 0.8181818181818182,
+      "recall": 0.6428571428571429,
+      "f1-score": 0.72,
+      "support": 28.0
+    },
+    "performance_problem": {
+      "precision": 0.9493670886075949,
+      "recall": 0.9868421052631579,
+      "f1-score": 0.967741935483871,
+      "support": 76.0
+    },
+    "power_problem": {
+      "precision": 0.8571428571428571,
+      "recall": 0.46153846153846156,
+      "f1-score": 0.6,
+      "support": 13.0
+    },
+    "video_problem": {
+      "precision": 0.25,
+      "recall": 0.8571428571428571,
+      "f1-score": 0.3870967741935484,
+      "support": 7.0
+    },
+    "accuracy": 0.8724279835390947,
+    "macro avg": {
+      "precision": 0.8004121927091629,
+      "recall": 0.7931882610383107,
+      "f1-score": 0.7567214445120714,
+      "support": 243.0
+    },
+    "weighted avg": {
+      "precision": 0.9163703074780235,
+      "recall": 0.8724279835390947,
+      "f1-score": 0.8840780565511749,
+      "support": 243.0
+    }
+  },
+  "confusion_matrix_labels": [
+    "audio_problem",
+    "cooling_problem",
+    "network_problem",
+    "performance_problem",
+    "power_problem",
+    "video_problem"
+  ],
+  "confusion_matrix": [
+    [
+      56,
+      0,
+      3,
+      1,
+      0,
+      6
+    ],
+    [
+      0,
+      51,
+      0,
+      2,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      18,
+      0,
+      1,
+      7
+    ],
+    [
+      0,
+      1,
+      0,
+      75,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      1,
+      0,
+      6,
+      5
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      0,
+      6
+    ]
+  ],
+  "limitation": "Synthetic classroom data. Does not establish real-world diagnostic accuracy."
+}

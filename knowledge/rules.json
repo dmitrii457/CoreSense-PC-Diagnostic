@@ -1,0 +1,91 @@
+[
+  {
+    "id": "R1",
+    "conditions": {
+      "AND": [
+        "computer_not_starting",
+        "no_power_indicator"
+      ]
+    },
+    "conclusion": "possible_power_problem",
+    "explanation": "Компьютер не включается и индикатор питания не горит."
+  },
+  {
+    "id": "R2",
+    "conditions": {
+      "AND": [
+        "no_display",
+        "monitor_power_on"
+      ]
+    },
+    "conclusion": "possible_video_problem",
+    "explanation": "Монитор включён, но изображение отсутствует."
+  },
+  {
+    "id": "R3",
+    "conditions": {
+      "OR": [
+        "computer_slow",
+        "high_cpu_usage"
+      ]
+    },
+    "conclusion": "possible_performance_problem",
+    "explanation": "Обнаружены признаки снижения производительности."
+  },
+  {
+    "id": "R4",
+    "conditions": {
+      "AND": [
+        "internet_not_working",
+        {
+          "NOT": "computer_not_starting"
+        }
+      ]
+    },
+    "conclusion": "possible_network_problem",
+    "explanation": "Интернет не работает, хотя компьютер включается."
+  },
+  {
+    "id": "R5",
+    "conditions": {
+      "AND": [
+        "possible_power_problem"
+      ]
+    },
+    "conclusion": "check_power_supply",
+    "explanation": "Обнаружена возможная проблема с питанием. Рекомендуется проверить цепь питания."
+  },
+  {
+    "id": "R6",
+    "conditions": {
+      "AND": [
+        "possible_video_problem"
+      ]
+    },
+    "conclusion": "check_video_connection",
+    "explanation": "Обнаружена возможная проблема с видеосистемой. Рекомендуется проверить подключение монитора."
+  },
+  {
+    "id": "R7",
+    "conditions": "no_sound",
+    "conclusion": "possible_audio_problem",
+    "explanation": "Отсутствие звука требует проверки громкости и устройства вывода."
+  },
+  {
+    "id": "R8",
+    "conditions": "overheating",
+    "conclusion": "possible_cooling_problem",
+    "explanation": "Сообщение о перегреве указывает на необходимость проверки охлаждения."
+  },
+  {
+    "id": "R9",
+    "conditions": {
+      "AND": [
+        "possible_cooling_problem",
+        "random_restart"
+      ]
+    },
+    "conclusion": "check_cooling_system",
+    "explanation": "Перегрев сопровождается перезагрузками. Проверьте температуру и вентиляцию."
+  }
+]

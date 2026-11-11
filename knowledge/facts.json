@@ -1,0 +1,35 @@
+{
+  "computer_not_starting": {
+    "description": "Компьютер не включается"
+  },
+  "no_power_indicator": {
+    "description": "Индикатор питания не горит"
+  },
+  "fans_not_spinning": {
+    "description": "Вентиляторы не вращаются"
+  },
+  "no_display": {
+    "description": "Нет изображения на мониторе"
+  },
+  "monitor_power_on": {
+    "description": "Монитор включён"
+  },
+  "computer_slow": {
+    "description": "Компьютер работает медленно"
+  },
+  "high_cpu_usage": {
+    "description": "Высокая загрузка процессора"
+  },
+  "internet_not_working": {
+    "description": "Интернет не работает"
+  },
+  "no_sound": {
+    "description": "Нет звука"
+  },
+  "overheating": {
+    "description": "Компьютер перегревается"
+  },
+  "random_restart": {
+    "description": "Самопроизвольная перезагрузка"
+  }
+}
