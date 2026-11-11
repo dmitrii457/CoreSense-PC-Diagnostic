@@ -104,18 +104,7 @@ class AIAssistant:
                         found[feature] = True
         return found
 
-    def ask(self, question):
-        if not question.strip():
-            return "Введите описание проблемы."
-
-        features = self.analyze_text(question)
-
-        if not any(features):
-            return (
-                "Не удалось определить симптомы.\n"
-                "Попробуйте описать проблему подробнее."
-            )
-
+    def collect_facts(self, question):
         mapping = dict(zip(FEATURES, ["computer_not_starting", "no_display",
             "computer_slow", "high_cpu_usage", "internet_not_working",
             "no_sound", "overheating", "random_restart"]))
@@ -127,9 +116,26 @@ class AIAssistant:
             ("вентиляторы не вращаются", "fans_not_spinning", True),
             ("монитор включен", "monitor_power_on", True),
             ("компьютер включается", "computer_not_starting", False),
+            ("индикатор горит", "no_power_indicator", False),
+            ("индикатор питания горит", "no_power_indicator", False),
+            ("вентиляторы вращаются", "fans_not_spinning", False),
+            ("монитор выключен", "monitor_power_on", False),
         ]:
             if phrase in normalized:
                 facts[name] = value
+        return facts
+
+    def ask(self, question, confirmed_facts=None):
+        if not question.strip():
+            return "Введите описание проблемы."
+        facts = self.collect_facts(question)
+        if confirmed_facts:
+            facts.update(confirmed_facts)
+        mapping = ["computer_not_starting", "no_display", "computer_slow", "high_cpu_usage",
+                   "internet_not_working", "no_sound", "overheating", "random_restart"]
+        features = [int(facts.get(name) is True) for name in mapping]
+        if not any(features):
+            return "Не удалось определить симптомы.\nПопробуйте описать проблему подробнее."
         _, history = self.production.forward_chain(facts)
         sample = pd.DataFrame([features], columns=FEATURES)
         result = "АНАЛИЗ FIXAI\n\nРаспознанные симптомы:\n"
@@ -184,6 +190,24 @@ class AIAssistant:
         )
 
         return result
+
+    def plan_category(self, question, confirmed_facts=None):
+        facts = self.collect_facts(question)
+        facts.update(confirmed_facts or {})
+        _, history = self.production.forward_chain(facts)
+        known = {step["conclusion"].removeprefix("possible_") for step in history
+                 if step["conclusion"].startswith("possible_")}
+        for category in ["cooling_problem", "power_problem", "video_problem", "network_problem", "audio_problem", "performance_problem"]:
+            if category in known:
+                return category
+        # A plan starts from reported symptoms, never from an unsupported model guess.
+        for fact, category in [("overheating", "cooling_problem"), ("computer_not_starting", "power_problem"),
+                               ("no_display", "video_problem"), ("internet_not_working", "network_problem"),
+                               ("no_sound", "audio_problem"), ("computer_slow", "performance_problem"),
+                               ("high_cpu_usage", "performance_problem")]:
+            if facts.get(fact) is True:
+                return category
+        return None
 
 
 if __name__ == "__main__":

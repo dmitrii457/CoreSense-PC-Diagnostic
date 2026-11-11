@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .vscode/
 .pytest_cache/
+user_data/
+*.sqlite3
+*.sqlite3-journal

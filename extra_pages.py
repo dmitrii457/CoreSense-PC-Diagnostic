@@ -14,7 +14,7 @@ from modules.ai_assistant import FEATURES, DIAGNOSES
 BASE_DIR = Path(__file__).resolve().parent
 
 PURPLE = "#7952E8"
-PANEL = "#151D2E"
+PANEL = ('#FFFFFF', '#151D2E')
 
 
 class ExtraPages:
@@ -163,7 +163,7 @@ class ExtraPages:
         self.path_target = ctk.CTkOptionMenu(self.content, values=nodes, width=350, height=36)
         self.path_target.pack(anchor="w", padx=35, pady=4)
         ctk.CTkButton(self.content, text="Найти путь между выбранными узлами",
-                      command=self.find_semantic_path, fg_color="#453379").pack(anchor="w", padx=35, pady=4)
+                      command=self.find_semantic_path, fg_color=('#7656AE', '#453379')).pack(anchor="w", padx=35, pady=4)
 
         ctk.CTkButton(
             self.content,
@@ -176,7 +176,7 @@ class ExtraPages:
             self.content,
             text="Показать граф",
             command=self.show_graph,
-            fg_color="#453379"
+            fg_color=('#7656AE', '#453379')
         ).pack(anchor="w", padx=35, pady=5)
 
         self.semantic_result = ctk.CTkTextbox(
@@ -234,7 +234,7 @@ class ExtraPages:
                 report = json.loads(report_path.read_text(encoding="utf-8"))
                 scores.append(f"{title}: {report['accuracy']:.2%}")
         ctk.CTkLabel(self.content, text="  •  ".join(scores) + "\nТест на синтетических данных без общих векторов с обучением.",
-                     text_color="#99A8C2", font=("Segoe UI", 12)).pack(anchor="w", padx=35, pady=(0, 6))
+                     text_color=('#53627B', '#99A8C2'), font=("Segoe UI", 12)).pack(anchor="w", padx=35, pady=(0, 6))
 
         self.classifier = self.ai_assistant.classifier
         self.neural_network = self.ai_assistant.neural_network

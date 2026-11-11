@@ -1,5 +1,6 @@
 from extra_pages import ExtraPages
 from modern_ui import ModernUI
+from feature_ui import FeatureUI
 from modules.ai_assistant import AIAssistant
 import customtkinter as ctk
 from pathlib import Path
@@ -13,8 +14,8 @@ ctk.set_default_color_theme("blue")
 BASE_DIR = Path(__file__).resolve().parent
 
 PURPLE = "#7952E8"
-BACKGROUND = "#0C101B"
-PANEL = "#151D2E"
+BACKGROUND = ('#F3F5FA', '#0C101B')
+PANEL = ('#FFFFFF', '#151D2E')
 
 KNOWLEDGE_BASE = {
     "Компьютер не включается": {
@@ -40,10 +41,11 @@ KNOWLEDGE_BASE = {
 }
 
 
-class FixAI(ModernUI, ctk.CTk, ExtraPages):
+class FixAI(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
 
     def __init__(self):
         super().__init__()
+        self.setup_features()
 
         self.title("FixAI — Интеллектуальная диагностика ПК")
         self.geometry("1220x820")
@@ -58,7 +60,7 @@ class FixAI(ModernUI, ctk.CTk, ExtraPages):
             self,
             width=240,
             corner_radius=0,
-            fg_color="#111725"
+            fg_color=('#E8EDF6', '#111725')
         )
         self.sidebar.pack(side="left", fill="y")
         self.sidebar.pack_propagate(False)
@@ -74,45 +76,50 @@ class FixAI(ModernUI, ctk.CTk, ExtraPages):
             self.sidebar,
             text="✦  FixAI",
             font=("Segoe UI", 32, "bold"),
-            text_color="#A78BFA"
+            text_color=('#6940C6', '#A78BFA')
         ).pack(pady=(35, 5))
 
         ctk.CTkLabel(
             self.sidebar,
             text="PC DIAGNOSTIC ASSISTANT",
-            text_color="#9999AD"
+            text_color=('#59667E', '#9999AD')
         ).pack(pady=(0, 35))
 
         pages = [
     ("Главная", self.home_page),
     ("Диагностика ПК", self.diagnostic_page),
     ("ИИ-помощник", self.ai_page),
+    ("История", self.history_page),
+    ("Схема ПК", self.component_page),
     ("Логический вывод", self.logic_page),
     ("Фреймовая модель", self.frames_page),
     ("Семантическая сеть", self.semantic_page),
     ("Машинное обучение", self.ml_page),
     ("База знаний", self.knowledge_page),
-    ("О проекте", self.about_page)
+    ("О проекте", self.about_page),
+    ("Настройки", self.settings_page)
 ]
 
         self.nav_buttons = {}
+        navigation = ctk.CTkScrollableFrame(self.sidebar, fg_color="transparent", corner_radius=0)
+        navigation.pack(fill="both", expand=True, padx=4, pady=0)
         for name, command in pages:
             button = ctk.CTkButton(
-                self.sidebar,
+                navigation,
                 text=name,
                 command=lambda n=name, cb=command: self.navigate(n, cb),
-                height=45,
+                height=36,
                 fg_color="transparent",
-                hover_color="#34304D",
+                hover_color=('#D9D1EA', '#34304D'),
                 anchor="w",
                 font=("Segoe UI", 14),
                 corner_radius=12
             )
-            button.pack(fill="x", padx=15, pady=4)
+            button.pack(fill="x", padx=8, pady=3)
             self.nav_buttons[name] = button
 
         ctk.CTkLabel(self.sidebar, text="●  Локальная система\nPython  /  Expert System",
-                     text_color="#7795A8", font=("Segoe UI", 11), justify="left").pack(side="bottom", pady=24)
+                     text_color=('#536B7A', '#7795A8'), font=("Segoe UI", 11), justify="left").pack(side="bottom", pady=24)
 
         self.navigate("Главная", self.home_page)
 
@@ -132,7 +139,7 @@ class FixAI(ModernUI, ctk.CTk, ExtraPages):
             values=list(KNOWLEDGE_BASE.keys()),
             width=430,
             height=45,
-            fg_color="#453379",
+            fg_color=('#7656AE', '#453379'),
             button_color=PURPLE
         )
         self.problem.pack(anchor="w", padx=35, pady=15)
