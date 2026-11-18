@@ -33,8 +33,8 @@ class ModernUI:
                     end = color_value(target, ACCENT if active else BORDER)
                     self.motion.animate(target, "focus-border",
                         lambda p: target.configure(border_color=mix_color(start, end, p)), 170)
-                widget.bind("<FocusIn>", lambda event, target=widget: focus_color(target, True), add="+")
-                widget.bind("<FocusOut>", lambda event, target=widget: focus_color(target, False), add="+")
+                widget.bind("<FocusIn>", lambda event=None, target=widget: focus_color(target, True), add="+")
+                widget.bind("<FocusOut>", lambda event=None, target=widget: focus_color(target, False), add="+")
             self._enhance_page(widget)
 
     def navigate(self, name, callback):
