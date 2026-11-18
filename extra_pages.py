@@ -123,7 +123,7 @@ class ExtraPages:
 
         if not key or not value:
             messagebox.showwarning(
-                "FixAI", "Заполните оба поля"
+                "CoreSense", "Заполните оба поля"
             )
             return
 
@@ -134,7 +134,7 @@ class ExtraPages:
         self.show_frame()
 
         messagebox.showinfo(
-            "FixAI", "Свойство успешно сохранено"
+            "CoreSense", "Свойство успешно сохранено"
         )
 
     def semantic_page(self):

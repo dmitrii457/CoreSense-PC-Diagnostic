@@ -5,11 +5,11 @@ import os
 import tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import FixAI
+from app import CoreSense
 
 temporary_data = tempfile.TemporaryDirectory()
-os.environ['FIXAI_DATA_DIR'] = temporary_data.name
-app = FixAI()
+os.environ['CORESENSE_DATA_DIR'] = temporary_data.name
+app = CoreSense()
 errors = []
 app.report_callback_exception = lambda kind, value, tb: errors.append(str(value))
 try:

@@ -24,7 +24,7 @@ class ModernUI:
     def heading(self, title, subtitle):
         top = ctk.CTkFrame(self.content, fg_color="transparent")
         top.pack(fill="x", padx=32, pady=(28, 16))
-        ctk.CTkLabel(top, text="РАБОЧЕЕ ПРОСТРАНСТВО  /  FIXAI", text_color=MUTED,
+        ctk.CTkLabel(top, text="РАБОЧЕЕ ПРОСТРАНСТВО  /  CORESENSE", text_color=MUTED,
                      font=("Segoe UI", 11, "bold")).pack(anchor="w")
         ctk.CTkLabel(top, text=title, font=("Segoe UI", 29, "bold"),
                      text_color=('#17233B', '#F3F5FC')).pack(anchor="w", pady=(8, 4))
@@ -33,7 +33,7 @@ class ModernUI:
 
     def home_page(self):
         self.clear_page()
-        self.heading("Разберёмся, что с компьютером", "Опишите симптомы. FixAI сопоставит их с правилами и прогнозами моделей.")
+        self.heading("Разберёмся, что с компьютером", "Опишите симптомы. CoreSense сопоставит их с правилами и прогнозами моделей.")
         hero = ctk.CTkFrame(self.content, fg_color=('#EEE8FC', '#211C39'), corner_radius=22,
                            border_width=1, border_color=('#D2C4EE', '#40345E'))
         hero.pack(fill="x", padx=32, pady=(8, 18))
@@ -81,10 +81,10 @@ class ModernUI:
 
     def about_page(self):
         self.clear_page()
-        self.heading("О FixAI", "Учебная экспертная система для предварительной диагностики ПК")
+        self.heading("О CoreSense", "Учебная экспертная система для предварительной диагностики ПК")
         box = ctk.CTkTextbox(self.content, fg_color=CARD, corner_radius=16, font=("Segoe UI", 16), wrap="word")
         box.pack(fill="both", expand=True, padx=32, pady=(8, 28))
-        box.insert("1.0", "FIXAI  /  DESKTOP\n\nPython · CustomTkinter · scikit-learn\n\n"
+        box.insert("1.0", "CORESENSE  /  DESKTOP\n\nPython · CustomTkinter · scikit-learn\n\n"
                    "База знаний: факты и продукционные правила в JSON.\n"
                    "Логика: AND, OR, NOT с неизвестными значениями.\n"
                    "Прямой вывод: цепочки правил с объяснением.\n"

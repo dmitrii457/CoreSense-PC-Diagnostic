@@ -41,13 +41,13 @@ KNOWLEDGE_BASE = {
 }
 
 
-class FixAI(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
+class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
 
     def __init__(self):
         super().__init__()
         self.setup_features()
 
-        self.title("FixAI — Интеллектуальная диагностика ПК")
+        self.title("CoreSense — Интеллектуальная диагностика ПК")
         self.geometry("1220x820")
         self.minsize(1100, 760)
         self.configure(fg_color=BACKGROUND)
@@ -74,7 +74,7 @@ class FixAI(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
 
         ctk.CTkLabel(
             self.sidebar,
-            text="✦  FixAI",
+            text="✦  CoreSense",
             font=("Segoe UI", 32, "bold"),
             text_color=('#6940C6', '#A78BFA')
         ).pack(pady=(35, 5))
@@ -326,5 +326,5 @@ class FixAI(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
 
 
 if __name__ == "__main__":
-    app = FixAI()
+    app = CoreSense()
     app.mainloop()

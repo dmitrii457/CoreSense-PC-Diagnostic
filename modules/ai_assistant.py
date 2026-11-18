@@ -138,7 +138,7 @@ class AIAssistant:
             return "Не удалось определить симптомы.\nПопробуйте описать проблему подробнее."
         _, history = self.production.forward_chain(facts)
         sample = pd.DataFrame([features], columns=FEATURES)
-        result = "АНАЛИЗ FIXAI\n\nРаспознанные симптомы:\n"
+        result = "АНАЛИЗ CORESENSE\n\nРаспознанные симптомы:\n"
         result += "\n".join("• " + KEYWORDS[name][0] for name, value in zip(FEATURES, features) if value)
         result += "\n\nПРОГНОЗЫ МОДЕЛЕЙ\n"
         predictions = []

@@ -129,4 +129,5 @@ class DiagnosticSession:
         for key in session.to_dict():
             if key in payload:
                 setattr(session, key, payload[key])
+        session.answer = session.answer.replace("АНАЛИЗ FIXAI", "АНАЛИЗ CORESENSE")
         return session

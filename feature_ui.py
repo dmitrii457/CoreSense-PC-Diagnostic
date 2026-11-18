@@ -162,7 +162,7 @@ class FeatureUI:
         try:
             self.store.save_session(session)
         except (OSError, sqlite3.Error) as error:
-            messagebox.showerror("История FixAI", f"Не удалось сохранить диагностику: {error}", parent=self)
+            messagebox.showerror("История CoreSense", f"Не удалось сохранить диагностику: {error}", parent=self)
 
     def _render_session(self, animate=False):
         self._answer_generation = getattr(self, "_answer_generation", 0) + 1
@@ -253,22 +253,22 @@ class FeatureUI:
 
     def export_current_pdf(self):
         if self._busy:
-            messagebox.showinfo("FixAI", "Дождитесь завершения анализа.", parent=self)
+            messagebox.showinfo("CoreSense", "Дождитесь завершения анализа.", parent=self)
             return
         if not self.current_session or not self.current_session.answer:
-            messagebox.showinfo("FixAI", "Сначала выполните диагностику или откройте её из истории.", parent=self)
+            messagebox.showinfo("CoreSense", "Сначала выполните диагностику или откройте её из истории.", parent=self)
             return
-        path = filedialog.asksaveasfilename(parent=self, title="Сохранить отчёт FixAI", defaultextension=".pdf",
-                                           filetypes=[("PDF", "*.pdf")], initialfile="FixAI-report.pdf")
+        path = filedialog.asksaveasfilename(parent=self, title="Сохранить отчёт CoreSense", defaultextension=".pdf",
+                                           filetypes=[("PDF", "*.pdf")], initialfile="CoreSense-report.pdf")
         if not path:
             return
         try:
             from modules.pdf_report import export_session_pdf
             export_session_pdf(self.current_session, path)
         except Exception as error:
-            messagebox.showerror("Экспорт FixAI", str(error), parent=self)
+            messagebox.showerror("Экспорт CoreSense", str(error), parent=self)
         else:
-            messagebox.showinfo("FixAI", "PDF-отчёт сохранён.", parent=self)
+            messagebox.showinfo("CoreSense", "PDF-отчёт сохранён.", parent=self)
 
     def history_page(self):
         self.clear_page()
@@ -302,7 +302,7 @@ class FeatureUI:
 
     def open_history_session(self, session_id):
         if self._busy:
-            messagebox.showinfo("FixAI", "Дождитесь завершения текущего анализа.", parent=self)
+            messagebox.showinfo("CoreSense", "Дождитесь завершения текущего анализа.", parent=self)
             return
         payload = self.store.load_session(session_id)
         if payload:

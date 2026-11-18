@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     facts, history = system.forward_chain(initial_facts)
 
-    print("ПРОДУКЦИОННАЯ СИСТЕМА FixAI\n")
+    print("ПРОДУКЦИОННАЯ СИСТЕМА CoreSense\n")
 
     for step in history:
         print(

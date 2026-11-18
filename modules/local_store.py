@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def data_directory():
-    return Path(os.environ.get("FIXAI_DATA_DIR", Path(__file__).resolve().parent.parent / "user_data"))
+    return Path(os.environ.get("CORESENSE_DATA_DIR", os.environ.get("FIXAI_DATA_DIR", Path(__file__).resolve().parent.parent / "user_data")))
 
 
 class LocalStore:

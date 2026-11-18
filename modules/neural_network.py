@@ -41,7 +41,7 @@ def train_neural_network():
 
     accuracy = accuracy_score(y_test, predictions)
 
-    print("НЕЙРОННАЯ СЕТЬ FIXAI")
+    print("НЕЙРОННАЯ СЕТЬ CORESENSE")
     print(f"Точность: {accuracy * 100:.2f}%")
     print("\nОтчёт классификации:")
     print(classification_report(y_test, predictions))

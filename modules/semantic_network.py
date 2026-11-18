@@ -78,7 +78,7 @@ class SemanticNetwork:
             font_size=7
         )
 
-        plt.title("Семантическая сеть FixAI")
+        plt.title("Семантическая сеть CoreSense")
         plt.axis("off")
         plt.tight_layout()
         plt.show()

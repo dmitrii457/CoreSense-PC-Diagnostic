@@ -33,7 +33,7 @@ def train_classifier():
 
     accuracy = accuracy_score(y_test, predictions)
 
-    print("КЛАССИФИКАТОР FIXAI")
+    print("КЛАССИФИКАТОР CORESENSE")
     print(f"Точность: {accuracy * 100:.2f}%")
     print("\nОтчёт классификации:")
     print(classification_report(y_test, predictions))
