@@ -7,6 +7,7 @@ from modules.frames import FrameSystem
 from modules.semantic_network import SemanticNetwork
 
 from modules.production import ProductionSystem
+from modules.scenarios import SCENARIOS
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -58,6 +59,7 @@ DIAGNOSES = {
     "audio_problem": "Возможная проблема со звуком",
     "cooling_problem": "Возможная проблема с охлаждением"
 }
+DIAGNOSES.update({key: scenario.label for key, scenario in SCENARIOS.items()})
 
 RECOMMENDATIONS = {
     "power_problem": "Проверьте розетку и кабель питания.",
@@ -110,6 +112,10 @@ class AIAssistant:
             "no_sound", "overheating", "random_restart"]))
         facts = {mapping[name]: True for name in self.extract_facts(question)}
         normalized = question.lower().replace("ё", "е")
+        for key, scenario in SCENARIOS.items():
+            if any(re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", normalized)
+                   for phrase in scenario.phrases):
+                facts[key] = True
         for phrase, name, value in [
             ("индикатор не горит", "no_power_indicator", True),
             ("индикатор питания не горит", "no_power_indicator", True),
@@ -134,12 +140,21 @@ class AIAssistant:
         mapping = ["computer_not_starting", "no_display", "computer_slow", "high_cpu_usage",
                    "internet_not_working", "no_sound", "overheating", "random_restart"]
         features = [int(facts.get(name) is True) for name in mapping]
+        scenarios = [scenario.label for key, scenario in SCENARIOS.items() if facts.get(key) is True]
+        if not any(features) and scenarios:
+            return ("АНАЛИЗ CORESENSE\n\nРаспознаны симптомы:\n"
+                    + "\n".join("• " + label for label in scenarios)
+                    + "\n\nОтветьте на вопросы и выполните проверки справа. "
+                      "Эти сценарии используют базу знаний. Модели для них не обучались.")
         if not any(features):
             return "Не удалось определить симптомы.\nПопробуйте описать проблему подробнее."
         _, history = self.production.forward_chain(facts)
         sample = pd.DataFrame([features], columns=FEATURES)
         result = "АНАЛИЗ CORESENSE\n\nРаспознанные симптомы:\n"
         result += "\n".join("• " + KEYWORDS[name][0] for name, value in zip(FEATURES, features) if value)
+        if scenarios:
+            result += "\n" + "\n".join("• " + label for label in scenarios)
+            result += "\nМодели оценивают только симптомы исходных шести категорий."
         result += "\n\nПРОГНОЗЫ МОДЕЛЕЙ\n"
         predictions = []
         for title, model in [("Random Forest", self.classifier), ("Нейросеть", self.neural_network)]:
@@ -194,6 +209,9 @@ class AIAssistant:
     def plan_category(self, question, confirmed_facts=None):
         facts = self.collect_facts(question)
         facts.update(confirmed_facts or {})
+        for key in ("overheating", "disk_error", "blue_screen", "usb_problem", "camera_problem", "bluetooth_problem"):
+            if facts.get(key) is True:
+                return "cooling_problem" if key == "overheating" else key
         _, history = self.production.forward_chain(facts)
         known = {step["conclusion"].removeprefix("possible_") for step in history
                  if step["conclusion"].startswith("possible_")}

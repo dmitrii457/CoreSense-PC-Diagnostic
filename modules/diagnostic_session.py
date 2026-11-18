@@ -1,6 +1,7 @@
 """Stateful follow-up questions and user-controlled troubleshooting steps."""
 from datetime import datetime, timezone
 from uuid import uuid4
+from modules.scenarios import SCENARIOS
 
 FOLLOWUPS = [
     ("computer_not_starting", "no_power_indicator", "Индикатор питания не горит?", False),
@@ -57,6 +58,18 @@ FACT_LABELS = {
     "high_cpu_usage": "Высокая загрузка CPU", "internet_not_working": "Не работает интернет",
     "no_sound": "Нет звука", "overheating": "Перегрев", "random_restart": "Самопроизвольная перезагрузка",
 }
+for scenario in SCENARIOS.values():
+    FACT_LABELS[scenario.key] = scenario.label
+    FACT_LABELS[scenario.first_fact] = scenario.first_question
+    FACT_LABELS[scenario.second_fact] = scenario.second_question
+
+FOLLOWUP_CHECKS = {
+    "blue_screen": "Запишите номер недавнего обновления и время первого сбоя для дальнейшей проверки.",
+    "disk_error": "Убедитесь, что резервная копия открывается с другого носителя.",
+    "usb_problem": "Раз устройство работает на другом ПК, проверьте исходный порт с исправным USB-устройством.",
+    "camera_problem": "Откройте физическую шторку и снова проверьте изображение.",
+    "bluetooth_problem": "Если устройство всё ещё не видно в режиме сопряжения, проверьте, видит ли его другой компьютер или телефон.",
+}
 
 
 class DiagnosticSession:
@@ -72,6 +85,15 @@ class DiagnosticSession:
         self.status = "active"
 
     def next_question(self):
+        for scenario in SCENARIOS.values():
+            if self.facts.get(scenario.key) is not True:
+                continue
+            questions = [(scenario.first_fact, scenario.first_question)]
+            if self.facts.get(scenario.first_fact) is False:
+                questions.append((scenario.second_fact, scenario.second_question))
+            for fact, prompt in questions:
+                if fact not in self.asked and self.facts.get(fact) is None:
+                    return {"fact": fact, "prompt": prompt, "inverse": False}
         for trigger, fact, prompt, inverse in FOLLOWUPS:
             if self.facts.get(trigger) is True and fact not in self.asked and self.facts.get(fact) is None:
                 return {"fact": fact, "prompt": prompt, "inverse": inverse}
@@ -87,6 +109,22 @@ class DiagnosticSession:
         self.asked.append(question["fact"])
 
     def set_plan(self, category):
+        if category in SCENARIOS:
+            scenario = SCENARIOS[category]
+            first = scenario.yes_check if self.facts.get(scenario.first_fact) is True else scenario.fallback_check
+            detail = FOLLOWUP_CHECKS[category] if self.facts.get(scenario.second_fact) is True else scenario.followup_check
+            checks = [first, detail]
+            if category == self.category:
+                completed = [step for step in self.steps if step["outcome"] != "pending"]
+                if self.status == "resolved":
+                    return
+            else:
+                completed = []
+            seen = {step["text"] for step in completed}
+            self.category = category
+            self.steps = completed + [{"text": check, "outcome": "pending"} for check in checks if check not in seen]
+            self.status = "active" if any(step["outcome"] == "pending" for step in self.steps) else "exhausted"
+            return
         if category == self.category and self.steps:
             return
         self.category = category

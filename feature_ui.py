@@ -47,6 +47,13 @@ class FeatureUI:
                                        border_width=1, border_color=("#E1E5F0", "#283147"),
                                        corner_radius=12, font=("Segoe UI", 14), wrap="word")
         self.ai_input.pack(fill="x", padx=32, pady=6)
+        self.scenario_examples = ctk.CTkOptionMenu(
+            examples, width=140, values=["Синий экран", "Ошибка диска", "Не работает USB",
+                                         "Не работает камера", "Не работает Bluetooth"],
+            command=self._set_prompt,
+        )
+        self.scenario_examples.set("Другие примеры")
+        self.scenario_examples.pack(side="left")
         if self.current_session:
             self.ai_input.insert("1.0", self.current_session.question)
         self.ai_input.bind("<Control-Return>", lambda event: self.run_ai())

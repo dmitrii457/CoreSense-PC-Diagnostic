@@ -8,6 +8,32 @@ from modules.pdf_report import export_session_pdf
 
 
 class FeatureTests(unittest.TestCase):
+    def test_extended_scenarios_branch_and_preserve_completed_checks(self):
+        from modules.scenarios import SCENARIOS
+
+        for category, scenario in SCENARIOS.items():
+            with self.subTest(category=category):
+                prompt = scenario.phrases[0]
+                facts = self.assistant.collect_facts(prompt)
+                self.assertEqual(self.assistant.plan_category(prompt, facts), category)
+                self.assertNotIn("ПРОГНОЗЫ МОДЕЛЕЙ", self.assistant.ask(prompt, facts))
+                yes = DiagnosticSession(prompt, facts)
+                yes.respond(True)
+                self.assertIsNone(yes.next_question())
+                yes.set_plan(category)
+                self.assertEqual(yes.steps[0]["text"], scenario.yes_check)
+
+                no = DiagnosticSession(prompt, facts)
+                no.respond(False)
+                self.assertEqual(no.next_question()["fact"], scenario.second_fact)
+                no.set_plan(category)
+                no.record_step("not_helped")
+                no = DiagnosticSession.from_dict(no.to_dict())
+                no.respond(True)
+                no.set_plan(category)
+                self.assertEqual(no.steps[0]["outcome"], "not_helped")
+                self.assertNotEqual(no.steps[1]["text"], scenario.followup_check)
+
     @classmethod
     def setUpClass(cls):
         cls.assistant = AIAssistant()
