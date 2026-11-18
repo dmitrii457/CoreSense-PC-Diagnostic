@@ -6,16 +6,18 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox
 import customtkinter as ctk
+from ui_components import MotionButton, SurfaceFrame
+from ui_motion import color_value, mix_color
 from modules.local_store import LocalStore
 from modules.diagnostic_session import DiagnosticSession, FACT_LABELS
 from modules.ai_assistant import DIAGNOSES
 from modules.frames import FrameSystem
 from modules.semantic_network import SemanticNetwork
 
-SURFACE = ("#FFFFFF", "#151D2E")
-TEXT = ("#17233B", "#F3F5FC")
-MUTED = ("#53627B", "#99A8C2")
-PRIMARY = "#7952E8"
+SURFACE = ("#FFFFFF", "#131927")
+TEXT = ("#1D2740", "#F0F3FC")
+MUTED = ("#53627B", "#99A6C1")
+PRIMARY = "#8057E6"
 SOFT = ("#EBE5FB", "#27213E")
 
 
@@ -34,23 +36,23 @@ class FeatureUI:
         self.clear_page()
         self._active_page = "assistant"
         self.heading("ИИ-помощник", "Уточните симптомы и пройдите проверки. Ответы и прогресс сохраняются автоматически.")
-        examples = ctk.CTkFrame(self.content, fg_color="transparent")
+        examples = SurfaceFrame(self.content, fg_color="transparent")
         examples.pack(fill="x", padx=32, pady=(0, 6))
         for label, prompt in [("Нет питания", "Компьютер не включается"), ("Нет изображения", "Нет изображения на мониторе"),
                               ("Нет интернета", "Нет интернета"), ("Перегрев", "Компьютер перегревается")]:
-            ctk.CTkButton(examples, text=label, width=135, height=28, fg_color=SOFT,
+            MotionButton(examples, text=label, width=135, height=28, fg_color=SOFT,
                           text_color=TEXT, hover_color=("#DBD1F4", "#35304E"),
                           command=lambda text=prompt: self._set_prompt(text)).pack(side="left", padx=(0, 7))
         self.ai_input = ctk.CTkTextbox(self.content, height=70, fg_color=SURFACE, text_color=TEXT,
-                                       border_width=1, border_color=("#C8D1E1", "#33415E"),
+                                       border_width=1, border_color=("#E1E5F0", "#283147"),
                                        corner_radius=12, font=("Segoe UI", 14), wrap="word")
         self.ai_input.pack(fill="x", padx=32, pady=6)
         if self.current_session:
             self.ai_input.insert("1.0", self.current_session.question)
         self.ai_input.bind("<Control-Return>", lambda event: self.run_ai())
-        bar = ctk.CTkFrame(self.content, fg_color="transparent")
+        bar = SurfaceFrame(self.content, fg_color="transparent")
         bar.pack(fill="x", padx=32, pady=6)
-        self.ai_button = ctk.CTkButton(bar, text="Новая диагностика →", height=38, width=185,
+        self.ai_button = MotionButton(bar, text="Новая диагностика →", height=38, width=185,
                                        fg_color=PRIMARY, command=self.run_ai,
                                        state="disabled" if self._busy else "normal")
         self.ai_button.pack(side="left")
@@ -63,15 +65,15 @@ class FeatureUI:
             self.ai_progress.configure(mode="indeterminate")
             self.ai_progress.start()
         # Reserve the action row before the expanding result area.
-        actions = ctk.CTkFrame(self.content, fg_color="transparent")
+        actions = SurfaceFrame(self.content, fg_color="transparent")
         actions.pack(side="bottom", fill="x", padx=32, pady=(6, 15))
-        ctk.CTkButton(actions, text="Скопировать", width=125, fg_color=SOFT, text_color=TEXT,
+        MotionButton(actions, text="Скопировать", width=125, fg_color=SOFT, text_color=TEXT,
                       command=self._copy_result).pack(side="left")
-        ctk.CTkButton(actions, text="Сохранить PDF", width=145, fg_color=PRIMARY,
+        MotionButton(actions, text="Сохранить PDF", width=145, fg_color=PRIMARY,
                       command=self.export_current_pdf).pack(side="left", padx=8)
-        ctk.CTkButton(actions, text="История", width=100, fg_color=SOFT, text_color=TEXT,
+        MotionButton(actions, text="История", width=100, fg_color=SOFT, text_color=TEXT,
                       command=lambda: self.navigate("История", self.history_page)).pack(side="right")
-        body = ctk.CTkFrame(self.content, fg_color="transparent")
+        body = SurfaceFrame(self.content, fg_color="transparent")
         body.pack(fill="both", expand=True, padx=32, pady=2)
         body.grid_columnconfigure(0, weight=3)
         body.grid_columnconfigure(1, weight=2, minsize=300)
@@ -112,6 +114,7 @@ class FeatureUI:
 
     def _analyze_session(self, session):
         self._answer_generation = getattr(self, "_answer_generation", 0) + 1
+        self.motion.cancel(self.ai_result, "report-text")
         self._busy = True
         self._persist_session(session)
         self.ai_button.configure(state="disabled")
@@ -169,29 +172,25 @@ class FeatureUI:
         generation = self._answer_generation
         session = self.current_session
         text = session.answer if session and session.answer else "Опишите проблему или выберите пример.\n\nЗдесь появятся прогнозы, объяснения правил и сведения о компонентах."
-        self.ai_result.configure(state="normal")
-        self.ai_result.delete("1.0", "end")
-        token = self._page_token
-        def reveal(offset=0):
-            if generation != self._answer_generation or token != self._page_token or getattr(self, "_active_page", None) != "assistant":
-                return
-            length = 130 if animate and self.preferences["animations"] else len(text)
+        if animate:
+            self.animate_text(self.ai_result, text, duration=min(1100, max(350, len(text)*0.5)))
+        else:
+            self.motion.cancel(self.ai_result, "report-text")
             self.ai_result.configure(state="normal")
-            self.ai_result.insert("end", text[offset:offset + length])
+            self.ai_result.delete("1.0", "end")
+            self.ai_result.insert("1.0", text)
             self.ai_result.configure(state="disabled")
-            if offset + length < len(text):
-                self.after(12, lambda: reveal(offset + length))
-        reveal()
         self._render_dialog()
 
     def _render_dialog(self):
+        self.motion.cancel_tree(self.dialog_panel)
         for child in self.dialog_panel.winfo_children():
             child.destroy()
         panel = self.dialog_panel
         session = self.current_session
         def label(text, bold=False, color=TEXT):
             ctk.CTkLabel(panel, text=text, justify="left", anchor="w", wraplength=290,
-                         font=("Segoe UI", 14 if bold else 12, "bold" if bold else "normal"),
+                         font=("Segoe UI", 15 if bold else 13, "bold" if bold else "normal"),
                          text_color=color).pack(fill="x", padx=10, pady=(8, 5))
         label("Уточняющие вопросы", True)
         if not session:
@@ -200,10 +199,10 @@ class FeatureUI:
         question = session.next_question()
         if question:
             label(question["prompt"])
-            row = ctk.CTkFrame(panel, fg_color="transparent")
+            row = SurfaceFrame(panel, fg_color="transparent")
             row.pack(fill="x", padx=10, pady=6)
             for title, value in [("Да", True), ("Нет", False), ("Не знаю", None)]:
-                ctk.CTkButton(row, text=title, width=80, height=30, fg_color=PRIMARY if value is True else SOFT,
+                MotionButton(row, text=title, width=80, height=30, fg_color=PRIMARY if value is True else SOFT,
                               text_color="white" if value is True else TEXT,
                               state="disabled" if self._busy else "normal",
                               command=lambda v=value: self.answer_followup(v)).pack(side="left", padx=(0, 5))
@@ -219,6 +218,13 @@ class FeatureUI:
             label("План появится после распознавания симптомов.", color=MUTED)
             return
         label(DIAGNOSES.get(session.category, ""), color=MUTED)
+        progress = ctk.CTkProgressBar(panel, height=5, progress_color=PRIMARY)
+        progress.pack(fill="x", padx=10, pady=(5, 10))
+        fraction = 1.0 if session.status == "resolved" else sum(step["outcome"] != "pending" for step in session.steps) / len(session.steps)
+        previous = getattr(self, "_plan_progress", 0)
+        progress.set(previous)
+        self.motion.animate(progress, "step-progress", lambda p: progress.set(previous+(fraction-previous)*p), 320)
+        self._plan_progress = fraction
         index = session.current_step()
         if session.status == "resolved":
             label("Вы отметили, что проверка помогла. Диагностика завершена.", color=("#24734F", "#76D7B0"))
@@ -228,7 +234,7 @@ class FeatureUI:
             label(f"Шаг {index + 1} из {len(session.steps)}", True)
             label(session.steps[index]["text"])
             for title, value in [("Проверил — не помогло", "not_helped"), ("Помогло", "helped"), ("Пропустить шаг", "skipped")]:
-                ctk.CTkButton(panel, text=title, height=32, fg_color=PRIMARY if value == "helped" else SOFT,
+                MotionButton(panel, text=title, height=32, fg_color=PRIMARY if value == "helped" else SOFT,
                               text_color="white" if value == "helped" else TEXT,
                               state="disabled" if self._busy else "normal",
                               command=lambda v=value: self.advance_plan(v)).pack(fill="x", padx=10, pady=4)
@@ -274,12 +280,12 @@ class FeatureUI:
         self.clear_page()
         self._active_page = "history"
         self.heading("История диагностик", "Локальные записи сохраняют ответы, объяснения и прогресс проверок.")
-        search = ctk.CTkFrame(self.content, fg_color="transparent")
+        search = SurfaceFrame(self.content, fg_color="transparent")
         search.pack(fill="x", padx=32, pady=(0, 12))
         self.history_query = ctk.CTkEntry(search, placeholder_text="Поиск по описанию проблемы", width=450)
         self.history_query.pack(side="left")
         self.history_query.bind("<Return>", lambda event: self._refresh_history())
-        ctk.CTkButton(search, text="Найти", width=100, command=self._refresh_history).pack(side="left", padx=8)
+        MotionButton(search, text="Найти", width=100, command=self._refresh_history).pack(side="left", padx=8)
         self.history_list = ctk.CTkScrollableFrame(self.content, fg_color=SURFACE, corner_radius=14)
         self.history_list.pack(fill="both", expand=True, padx=32, pady=(0, 24))
         self._refresh_history()
@@ -291,13 +297,13 @@ class FeatureUI:
         if not records:
             ctk.CTkLabel(self.history_list, text="Диагностик пока нет или по запросу ничего не найдено.", text_color=MUTED).pack(pady=30)
         for session_id, updated, question in records:
-            row = ctk.CTkFrame(self.history_list, fg_color=SOFT, corner_radius=12)
+            row = SurfaceFrame(self.history_list, fg_color=SOFT, corner_radius=12)
             row.pack(fill="x", padx=8, pady=6)
             stamp = datetime.fromisoformat(updated).astimezone().strftime("%d.%m.%Y %H:%M")
             ctk.CTkLabel(row, text=stamp, text_color=MUTED, font=("Segoe UI", 11)).pack(anchor="w", padx=16, pady=(10, 2))
             ctk.CTkLabel(row, text=question[:160], text_color=TEXT, wraplength=650,
                          justify="left", font=("Segoe UI", 14)).pack(anchor="w", padx=16)
-            ctk.CTkButton(row, text="Открыть и продолжить", width=190,
+            MotionButton(row, text="Открыть и продолжить", width=190,
                           command=lambda sid=session_id: self.open_history_session(sid)).pack(anchor="w", padx=16, pady=10)
 
     def open_history_session(self, session_id):
@@ -313,7 +319,7 @@ class FeatureUI:
         self.clear_page()
         self._active_page = "settings"
         self.heading("Настройки", "Оформление и анимации сохраняются между запусками.")
-        card = ctk.CTkFrame(self.content, fg_color=SURFACE, corner_radius=16)
+        card = SurfaceFrame(self.content, fg_color=SURFACE, corner_radius=16)
         card.pack(fill="x", padx=32, pady=8)
         ctk.CTkLabel(card, text="Тема приложения", text_color=TEXT, font=("Segoe UI", 18, "bold")).pack(anchor="w", padx=24, pady=(22, 12))
         themes = {"Тёмная": "dark", "Светлая": "light", "Как в системе": "system"}
@@ -340,19 +346,21 @@ class FeatureUI:
     def change_animations(self):
         self.preferences["animations"] = bool(self.animation_value.get())
         self.store.save_settings(self.preferences)
+        if not self.preferences["animations"]:
+            self.motion.cancel_all(finish=True)
 
     def component_page(self):
         self.clear_page()
         self._active_page = "components"
         self.heading("Интерактивная схема ПК", "Выберите компонент на схеме или из списка. Справа появятся его свойства и связи.")
-        body = ctk.CTkFrame(self.content, fg_color="transparent")
+        body = SurfaceFrame(self.content, fg_color="transparent")
         body.pack(fill="both", expand=True, padx=32, pady=(0, 24))
         body.grid_columnconfigure(0, weight=3)
         body.grid_columnconfigure(1, weight=2)
         body.grid_rowconfigure(0, weight=1)
-        visual = ctk.CTkFrame(body, fg_color=SURFACE, corner_radius=14)
+        visual = SurfaceFrame(body, fg_color=SURFACE, corner_radius=14)
         visual.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
-        self.component_canvas = tk.Canvas(visual, highlightthickness=0, height=350, background="#151D2E")
+        self.component_canvas = tk.Canvas(visual, highlightthickness=0, height=350, background="#131927")
         self.component_canvas.pack(fill="both", expand=True, padx=12, pady=12)
         self.component_selector = ctk.CTkOptionMenu(visual, values=["Процессор", "Оперативная память", "Видеокарта", "Жёсткий диск", "Блок питания", "Монитор"], command=self.select_component)
         self.component_selector.pack(fill="x", padx=12, pady=(0, 12))
@@ -375,18 +383,19 @@ class FeatureUI:
         canvas = self.component_canvas
         canvas.delete("all")
         light = ctk.get_appearance_mode() == "Light"
-        canvas.configure(background="#FFFFFF" if light else "#151D2E")
+        canvas.configure(background="#FFFFFF" if light else "#131927")
         width, height = max(320, canvas.winfo_width()), max(280, canvas.winfo_height())
         canvas.create_rectangle(4, 4, width - 4, height - 4, outline="#8B79B5", width=2)
+        self._component_rectangles = {}
         for name, (x1, y1, x2, y2) in self._component_nodes.items():
             selected = name == self._selected_component
             tag = "node:" + name
-            canvas.create_rectangle(x1*width, y1*height, x2*width, y2*height,
-                                     fill="#7952E8" if selected else ("#ECE7F8" if light else "#29334C"),
-                                     outline="#BCA5FF" if selected else "#7C8BA5", width=2, tags=(tag,))
+            self._component_rectangles[name] = canvas.create_rectangle(x1*width, y1*height, x2*width, y2*height,
+                                     fill="#8057E6" if selected else ("#F0EDFA" if light else "#20283D"),
+                                     outline="#BCA5FF" if selected else ("#C9CDE0" if light else "#39455D"), width=2 if selected else 1, tags=(tag,))
             canvas.create_text((x1+x2)/2*width, (y1+y2)/2*height, text=name,
-                                width=(x2-x1)*width-10, fill="white" if selected else ("#17233B" if light else "#E5ECF8"),
-                                font=("Segoe UI", 11), tags=(tag,))
+                                width=(x2-x1)*width-10, fill="white" if selected else ("#1D2740" if light else "#E5ECF8"),
+                                font=("Segoe UI", 12), tags=(tag,))
             canvas.tag_bind(tag, "<Button-1>", lambda event, component=name: self.select_component(component))
         canvas.create_text(width/2, height*0.365, text="Компоненты компьютера", fill="#7787A4", font=("Segoe UI", 10))
 
@@ -395,6 +404,7 @@ class FeatureUI:
         self.component_canvas.configure(cursor="hand2" if items and any(tag.startswith("node:") for tag in self.component_canvas.gettags(items[0])) else "")
 
     def select_component(self, name):
+        previous = getattr(self, "_selected_component", None)
         self._selected_component = name
         self.component_selector.set(name)
         properties = self._component_frames.get_properties(name) if name in self._component_frames.frames else {}
@@ -403,8 +413,11 @@ class FeatureUI:
         text += "\n".join(f"{key}: {value}" for key, value in properties.items()) or "Отдельный фрейм пока не задан."
         text += "\n\nСВЯЗИ\n"
         text += "\n".join(f"{name} → {item['relation']} → {item['object']}" for item in relations) or "Исходящих связей пока нет."
-        self.component_details.configure(state="normal")
-        self.component_details.delete("1.0", "end")
-        self.component_details.insert("1.0", text)
-        self.component_details.configure(state="disabled")
+        self.animate_text(self.component_details, text, 350)
         self._draw_components()
+        if previous and previous != name:
+            background = "#F0EDFA" if ctk.get_appearance_mode() == "Light" else "#20283D"
+            def select_color(progress):
+                for component, start, end in [(previous, "#8057E6", background), (name, background, "#8057E6")]:
+                    self.component_canvas.itemconfigure(self._component_rectangles[component], fill=mix_color(start, end, progress))
+            self.motion.animate(self.component_canvas, "component-select", select_color, 240)

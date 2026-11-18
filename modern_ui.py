@@ -1,102 +1,155 @@
-"""Desktop presentation layer. All Tk updates stay on the main thread."""
-import math
+"""Desktop layout and shared page transitions."""
 import customtkinter as ctk
-
-BG = ('#F3F5FA', '#0C101B')
-CARD = ('#FFFFFF', '#151D2E')
-ACCENT = ('#6940C6', '#9A7BFF')
-MUTED = ('#53627B', '#99A8C2')
+from ui_components import MotionButton, SurfaceFrame, CoreOrbit, BG, SURFACE, TEXT, MUTED, ACCENT, BORDER, PRIMARY, SOFT
+from ui_motion import color_value, mix_color
 
 
 class ModernUI:
     def clear_page(self):
         self._page_token = getattr(self, "_page_token", 0) + 1
         self._active_page = None
+        self.motion.cancel_tree(self.content)
         for widget in self.content.winfo_children():
             widget.destroy()
+        token = self._page_token
+        animated = self.preferences["animations"]
+        self.content.place_configure(x=18 if animated else 0, y=7 if animated else 0)
+
+        def enter():
+            if token != self._page_token:
+                return
+            self.motion.animate(self.content, "page-slide",
+                lambda p: self.content.place_configure(x=round(18*(1-p)), y=round(7*(1-p))), 240)
+            self._enhance_page(self.content)
+
+        self.motion.defer(self.content, "page-enter", enter)
+
+    def _enhance_page(self, parent):
+        for widget in parent.winfo_children():
+            if isinstance(widget, (ctk.CTkEntry, ctk.CTkTextbox)) and not getattr(widget, "_motion_focus", False):
+                widget._motion_focus = True
+                def focus_color(target, active):
+                    start = color_value(target, target.cget("border_color"))
+                    end = color_value(target, ACCENT if active else BORDER)
+                    self.motion.animate(target, "focus-border",
+                        lambda p: target.configure(border_color=mix_color(start, end, p)), 170)
+                widget.bind("<FocusIn>", lambda event, target=widget: focus_color(target, True), add="+")
+                widget.bind("<FocusOut>", lambda event, target=widget: focus_color(target, False), add="+")
+            self._enhance_page(widget)
 
     def navigate(self, name, callback):
+        self._active_nav = name
         for label, button in self.nav_buttons.items():
-            button.configure(fg_color=('#DDD4F5', '#2A2444') if label == name else "transparent",
-                             text_color=('#55329E', '#D6C9FF') if label == name else MUTED)
+            button.configure(fg_color=SOFT if label == name else "transparent",
+                             text_color=ACCENT if label == name else MUTED)
         callback()
 
     def heading(self, title, subtitle):
-        top = ctk.CTkFrame(self.content, fg_color="transparent")
-        top.pack(fill="x", padx=32, pady=(28, 16))
-        ctk.CTkLabel(top, text="РАБОЧЕЕ ПРОСТРАНСТВО  /  CORESENSE", text_color=MUTED,
-                     font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        ctk.CTkLabel(top, text=title, font=("Segoe UI", 29, "bold"),
-                     text_color=('#17233B', '#F3F5FC')).pack(anchor="w", pady=(8, 4))
-        ctk.CTkLabel(top, text=subtitle, text_color=MUTED, font=("Segoe UI", 14),
-                     wraplength=620, justify="left").pack(anchor="w")
+        top = SurfaceFrame(self.content, fg_color="transparent")
+        top.pack(fill="x", padx=32, pady=(25, 14))
+        breadcrumb = SurfaceFrame(top, fg_color="transparent")
+        breadcrumb.pack(fill="x", pady=(0, 8))
+        ctk.CTkLabel(breadcrumb, text="CORESENSE   /   РАБОЧЕЕ ПРОСТРАНСТВО", text_color=MUTED,
+                     font=("Segoe UI", 10, "bold")).pack(side="left")
+        ctk.CTkLabel(breadcrumb, text="●  Локально", text_color=("#32735D", "#83CCB2"),
+                     fg_color=("#E7F1EB", "#16272A"), corner_radius=9,
+                     font=("Segoe UI", 10), width=90, height=24).pack(side="right")
+        ctk.CTkLabel(top, text=title, font=("Segoe UI", 29, "bold"), text_color=TEXT,
+                     anchor="w").pack(fill="x", pady=(0, 4))
+        ctk.CTkLabel(top, text=subtitle, text_color=MUTED, font=("Segoe UI", 13),
+                     wraplength=740, justify="left", anchor="w").pack(fill="x")
 
     def home_page(self):
         self.clear_page()
-        self.heading("Разберёмся, что с компьютером", "Опишите симптомы. CoreSense сопоставит их с правилами и прогнозами моделей.")
-        hero = ctk.CTkFrame(self.content, fg_color=('#EEE8FC', '#211C39'), corner_radius=22,
-                           border_width=1, border_color=('#D2C4EE', '#40345E'))
-        hero.pack(fill="x", padx=32, pady=(8, 18))
-        left = ctk.CTkFrame(hero, fg_color="transparent")
-        left.pack(side="left", fill="both", expand=True, padx=26, pady=26)
-        ctk.CTkLabel(left, text="ВАШ ПОМОЩНИК ПО ДИАГНОСТИКЕ", text_color=ACCENT,
-                     font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        ctk.CTkLabel(left, text="Меньше догадок.\nБольше ясности.", justify="left",
-                     font=("Segoe UI", 30, "bold")).pack(anchor="w", pady=12)
-        ctk.CTkLabel(left, text="Рекомендации с объяснением каждого шага.",
-                     text_color=('#635378', '#B9B1D1'), font=("Segoe UI", 13)).pack(anchor="w")
-        ctk.CTkButton(left, text="Открыть помощника   →", height=44, corner_radius=12,
-                      fg_color="#7952E8", hover_color="#916DF4",
-                      command=lambda: self.navigate("ИИ-помощник", self.ai_page)).pack(anchor="w", pady=(20, 0))
-        orb = ctk.CTkLabel(hero, text="✦", width=140, font=("Segoe UI", 94), text_color=ACCENT)
-        orb.pack(side="right", padx=28)
-        token = self._page_token
-        def breathe(step=0):
-            if token != self._page_token or not self.preferences["animations"]:
-                return
-            v = (math.sin(step / 12) + 1) / 2
-            orb.configure(text_color=f"#{int(135 + 35*v):02x}{int(101 + 37*v):02x}ff")
-            self.after(55, lambda: breathe(step + 1))
-        breathe()
-        row = ctk.CTkFrame(self.content, fg_color="transparent")
+        self.heading("Всё начинается с понятного диагноза", "Опишите, что происходит. CoreSense поможет разобраться в симптомах и выбрать следующий шаг.")
+        hero = SurfaceFrame(self.content, fg_color=("#F0EBFC", "#1A1830"), corner_radius=24,
+                            border_color=("#DDD0F3", "#393052"))
+        hero.pack(fill="x", padx=32, pady=(6, 20))
+        orbit_host = SurfaceFrame(hero, fg_color="transparent")
+        orbit_host.pack(side="right", padx=(10, 28), pady=28)
+        CoreOrbit(orbit_host, size=180).pack()
+        left = SurfaceFrame(hero, fg_color="transparent")
+        left.pack(side="left", fill="both", expand=True, padx=(28, 0), pady=25)
+        ctk.CTkLabel(left, text="✦  ВАШ ПОМОЩНИК ПО ДИАГНОСТИКЕ", text_color=ACCENT,
+                     font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        ctk.CTkLabel(left, text="Поймём причину.\nНайдём решение.", justify="left", text_color=TEXT,
+                     font=("Segoe UI", 33, "bold")).pack(anchor="w", pady=(12, 8))
+        ctk.CTkLabel(left, text="Проверки по шагам и объяснение каждого вывода.",
+                     text_color=MUTED, font=("Segoe UI", 12), wraplength=425,
+                     justify="left").pack(anchor="w")
+        actions = SurfaceFrame(left, fg_color="transparent")
+        actions.pack(anchor="w", pady=(20, 0))
+        MotionButton(actions, text="Начать диагностику  →", width=190, height=42, fg_color=PRIMARY,
+                      command=lambda: self.navigate("ИИ-помощник", self.ai_page)).pack(side="left")
+        MotionButton(actions, text="Схема ПК", width=105, height=42, fg_color=("#E5DCF7", "#2C2546"),
+                      text_color=ACCENT, hover_color=("#D6C9EE", "#42365D"),
+                      command=lambda: self.navigate("Схема ПК", self.component_page)).pack(side="left", padx=10)
+        title_row = SurfaceFrame(self.content, fg_color="transparent")
+        title_row.pack(fill="x", padx=34, pady=(0, 10))
+        ctk.CTkLabel(title_row, text="Инструменты системы", text_color=TEXT,
+                     font=("Segoe UI", 18, "bold")).pack(side="left")
+        ctk.CTkLabel(title_row, text="Знания, которые можно проверить", text_color=MUTED,
+                     font=("Segoe UI", 11)).pack(side="right")
+        row = SurfaceFrame(self.content, fg_color="transparent")
         row.pack(fill="x", padx=32)
-        row.grid_columnconfigure((0, 1, 2), weight=1, uniform="cards")
-        cards = [("01", "Объяснимый вывод", "Факты, AND / OR / NOT\nи цепочки правил", self.logic_page, "Логический вывод"),
-                 ("02", "Связанные знания", "Фреймы, наследование\nи семантическая сеть", self.frames_page, "Фреймовая модель"),
-                 ("03", "Две модели", "Random Forest\nи нейронная сеть", self.ml_page, "Машинное обучение")]
-        for index, (number, title, desc, callback, name) in enumerate(cards):
-            card = ctk.CTkFrame(row, fg_color=CARD, corner_radius=16, border_width=1, border_color=('#D5DCE9', '#263147'))
-            card.grid(row=0, column=index, sticky="nsew", padx=(0 if index == 0 else 6, 0 if index == 2 else 6), pady=8)
-            ctk.CTkLabel(card, text=number, text_color=ACCENT, font=("Segoe UI", 12, "bold")).pack(anchor="w", padx=18, pady=(16, 6))
-            ctk.CTkLabel(card, text=title, font=("Segoe UI", 16, "bold")).pack(anchor="w", padx=18)
-            ctk.CTkLabel(card, text=desc, justify="left", text_color=MUTED, font=("Segoe UI", 12)).pack(anchor="w", padx=18, pady=8)
-            ctk.CTkButton(card, text="Открыть →", fg_color="transparent", hover_color=('#DFE5F2', '#25304A'),
-                          anchor="w", command=lambda n=name, cb=callback: self.navigate(n, cb)).pack(fill="x", padx=12, pady=(0, 12))
-        ctk.CTkLabel(self.content, text="Локальная работа  •  Без отправки запросов в облако",
-                     text_color=MUTED, font=("Segoe UI", 12)).pack(anchor="w", padx=36, pady=18)
+        row.grid_columnconfigure((0, 1, 2), weight=1, uniform="tools")
+        cards = [
+            (len(self.logic_engine.rules), "Правила вывода", "Факты, условия и понятные объяснения", self.logic_page, "Логический вывод"),
+            (len(self.ai_assistant.frames.frames), "Фреймы объектов", "Свойства компонентов и наследование", self.frames_page, "Фреймовая модель"),
+            (sum(model is not None for model in (self.ai_assistant.classifier, self.ai_assistant.neural_network)),
+             "Модели обучения", "Random Forest и нейронная сеть", self.ml_page, "Машинное обучение"),
+        ]
+        for index, (number, title, description, callback, name) in enumerate(cards):
+            card = SurfaceFrame(row, fg_color=SURFACE, corner_radius=18)
+            card.grid(row=0, column=index, sticky="nsew", padx=(0 if index == 0 else 6, 0 if index == 2 else 6))
+            value = ctk.CTkLabel(card, text=str(number), text_color=ACCENT, font=("Segoe UI", 28, "bold"))
+            value.pack(anchor="w", padx=20, pady=(16, 2))
+            ctk.CTkLabel(card, text=title, text_color=TEXT, font=("Segoe UI", 15, "bold")).pack(anchor="w", padx=20)
+            ctk.CTkLabel(card, text=description, text_color=MUTED, font=("Segoe UI", 11),
+                         wraplength=215, justify="left").pack(anchor="w", padx=20, pady=(6, 10))
+            MotionButton(card, text="Открыть раздел   →", fg_color="transparent", text_color=ACCENT,
+                          hover_color=SOFT, anchor="w", height=30,
+                          command=lambda n=name, cb=callback: self.navigate(n, cb)).pack(fill="x", padx=12, pady=(0, 12))
+            self.motion.animate(value, "counter", lambda p, target=value, total=number: target.configure(text=str(round(total*p))),
+                                500, delay=index*60)
+        ctk.CTkLabel(self.content, text="●  Запросы обрабатываются на устройстве. Историю можно продолжить в любое время.",
+                     text_color=MUTED, font=("Segoe UI", 11)).pack(anchor="w", padx=35, pady=20)
 
+    def animate_text(self, widget, text, duration=700):
+        widget.configure(state="normal")
+        widget.delete("1.0", "end")
+        shown = min(45, len(text))
+        widget.insert("1.0", text[:shown])
+        widget.configure(state="disabled")
 
+        def reveal(progress):
+            nonlocal shown
+            count = min(len(text), max(shown, round(len(text)*progress)))
+            widget.configure(state="normal")
+            widget.insert("end", text[shown:count])
+            widget.configure(state="disabled")
+            shown = count
 
+        def decorate():
+            widget.tag_config("report_heading", foreground=color_value(widget, ACCENT), spacing1=10, spacing3=6)
+            for index, line in enumerate(text.splitlines(), 1):
+                if line.isupper() and len(line) < 80:
+                    widget.tag_add("report_heading", f"{index}.0", f"{index}.end")
 
+        self.motion.animate(widget, "report-text", reveal, duration, done=decorate)
 
     def about_page(self):
         self.clear_page()
-        self.heading("О CoreSense", "Учебная экспертная система для предварительной диагностики ПК")
-        box = ctk.CTkTextbox(self.content, fg_color=CARD, corner_radius=16, font=("Segoe UI", 16), wrap="word")
-        box.pack(fill="both", expand=True, padx=32, pady=(8, 28))
-        box.insert("1.0", "CORESENSE  /  DESKTOP\n\nPython · CustomTkinter · scikit-learn\n\n"
-                   "База знаний: факты и продукционные правила в JSON.\n"
-                   "Логика: AND, OR, NOT с неизвестными значениями.\n"
-                   "Прямой вывод: цепочки правил с объяснением.\n"
-                   "Фреймы: наследование, поиск и изменение свойств.\n"
-                   "Семантическая сеть: компоненты, симптомы и связи.\n"
-                   "Обучение: Random Forest и MLPClassifier.\n\n"
-                   "Помощник объединяет правила, прогнозы и сведения о компонентах.\n"
-                   "Текстовые запросы обрабатываются локально по словарю симптомов.\n\n"
-                   "Диалог: уточняющие вопросы и план проверки.\n"
-                   "История: локальная SQLite, восстановление прогресса.\n"
-                   "Отчёты: экспорт в PDF с кириллицей.\n"
-                   "Оформление: светлая/тёмная тема, отключение анимаций.\n\n"
-                   "Модели обучены на синтетических данных. Результат предварительный.\n"
-                   "Программа не измеряет состояние оборудования автоматически.")
-        box.configure(state="disabled")
+        self.heading("О CoreSense", "Экспертная система для предварительной диагностики компьютера")
+        box = ctk.CTkTextbox(self.content, fg_color=SURFACE, corner_radius=18, font=("Segoe UI", 14), wrap="word")
+        box.pack(fill="both", expand=True, padx=32, pady=(6, 25))
+        self.animate_text(box,
+            "CORESENSE\nЧувствовать систему\n\n"
+            "Ваш помощник по диагностике ПК. Задаёт уточняющие вопросы, объясняет выводы и предлагает проверки по шагам.\n\n"
+            "ЗНАНИЯ И ВЫВОД\nJSON-база фактов, продукционные правила и прямой вывод.\n"
+            "AND, OR, NOT с неизвестными значениями.\nФреймы с наследованием и семантическая сеть.\n\n"
+            "ОБУЧЕННЫЕ МОДЕЛИ\nRandom Forest и MLPClassifier сравнивают категории неисправностей.\n\n"
+            "РАБОТА С ПРИЛОЖЕНИЕМ\nЛокальная история, восстановление прогресса и отчёты в PDF.\n"
+            "Светлая и тёмная темы. Все анимации можно отключить в настройках.\n\n"
+            "Модели обучены на синтетических данных. Результат предварительный.\n"
+            "Программа не измеряет состояние оборудования автоматически.")

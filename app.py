@@ -3,19 +3,21 @@ from modern_ui import ModernUI
 from feature_ui import FeatureUI
 from modules.ai_assistant import AIAssistant
 import customtkinter as ctk
+from ui_components import MotionButton, SurfaceFrame
 from pathlib import Path
 import json
 
 from modules.logic_engine import LogicEngine
+from ui_motion import MotionEngine
 
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
+ctk.set_default_color_theme(str(Path(__file__).resolve().parent / "assets/coresense-theme.json"))
 
 BASE_DIR = Path(__file__).resolve().parent
 
-PURPLE = "#7952E8"
-BACKGROUND = ('#F3F5FA', '#0C101B')
-PANEL = ('#FFFFFF', '#151D2E')
+PURPLE = "#8057E6"
+BACKGROUND = ('#F5F6FB', '#0B0E17')
+PANEL = ('#FFFFFF', '#131927')
 
 KNOWLEDGE_BASE = {
     "Компьютер не включается": {
@@ -46,6 +48,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
     def __init__(self):
         super().__init__()
         self.setup_features()
+        self.motion = MotionEngine(self, lambda: self.preferences["animations"])
 
         self.title("CoreSense — Интеллектуальная диагностика ПК")
         self.geometry("1220x820")
@@ -56,7 +59,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
         self.ai_assistant = AIAssistant()
         self.fact_variables = {}
 
-        self.sidebar = ctk.CTkFrame(
+        self.sidebar = SurfaceFrame(
             self,
             width=240,
             corner_radius=0,
@@ -65,25 +68,25 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
         self.sidebar.pack(side="left", fill="y")
         self.sidebar.pack_propagate(False)
 
-        self.content = ctk.CTkFrame(
+        self.page_stage = SurfaceFrame(
             self,
             fg_color=BACKGROUND,
             corner_radius=0
         )
-        self.content.pack(side="right", fill="both", expand=True)
+        self.page_stage.pack(side="right", fill="both", expand=True)
+        self.content = SurfaceFrame(self.page_stage, fg_color=BACKGROUND, corner_radius=0)
+        self.content.place(x=0, y=0, relwidth=1, relheight=1)
 
-        ctk.CTkLabel(
-            self.sidebar,
-            text="✦  CoreSense",
-            font=("Segoe UI", 32, "bold"),
-            text_color=('#6940C6', '#A78BFA')
-        ).pack(pady=(35, 5))
-
-        ctk.CTkLabel(
-            self.sidebar,
-            text="PC DIAGNOSTIC ASSISTANT",
-            text_color=('#59667E', '#9999AD')
-        ).pack(pady=(0, 35))
+        brand = SurfaceFrame(self.sidebar, fg_color="transparent")
+        brand.pack(fill="x", padx=22, pady=(28, 24))
+        ctk.CTkLabel(brand, text="C", width=38, height=38, corner_radius=12,
+                     fg_color="#8057E6", text_color="white", font=("Segoe UI", 23, "bold")).pack(side="left")
+        wordmark = SurfaceFrame(brand, fg_color="transparent")
+        wordmark.pack(side="left", padx=(10, 0))
+        ctk.CTkLabel(wordmark, text="CoreSense", font=("Segoe UI", 23, "bold"),
+                     text_color=("#1D2740", "#F0F3FC")).pack(anchor="w")
+        ctk.CTkLabel(wordmark, text="Чувствовать систему", font=("Segoe UI", 10),
+                     text_color=("#65708A", "#99A6C1")).pack(anchor="w")
 
         pages = [
     ("Главная", self.home_page),
@@ -103,23 +106,33 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
         self.nav_buttons = {}
         navigation = ctk.CTkScrollableFrame(self.sidebar, fg_color="transparent", corner_radius=0)
         navigation.pack(fill="both", expand=True, padx=4, pady=0)
+        icons = {"Главная": "⌂", "Диагностика ПК": "◎", "ИИ-помощник": "✦", "История": "◷",
+                 "Схема ПК": "▦", "Логический вывод": "⋈", "Фреймовая модель": "◇",
+                 "Семантическая сеть": "⌘", "Машинное обучение": "◉", "База знаний": "▤",
+                 "О проекте": "ⓘ", "Настройки": "⚙"}
+        sections = {"Главная": "РАБОЧЕЕ ПРОСТРАНСТВО", "Логический вывод": "ЗНАНИЯ И МОДЕЛИ", "О проекте": "ПРИЛОЖЕНИЕ"}
         for name, command in pages:
-            button = ctk.CTkButton(
+            if name in sections:
+                ctk.CTkLabel(navigation, text=sections[name], font=("Segoe UI", 9, "bold"),
+                             text_color=("#8490A7", "#66748E"), anchor="w").pack(fill="x", padx=16, pady=(10, 5))
+            button = MotionButton(
                 navigation,
-                text=name,
+                text=f"{icons[name]}    {name}",
                 command=lambda n=name, cb=command: self.navigate(n, cb),
                 height=36,
                 fg_color="transparent",
                 hover_color=('#D9D1EA', '#34304D'),
                 anchor="w",
-                font=("Segoe UI", 14),
+                font=("Segoe UI", 13),
                 corner_radius=12
             )
             button.pack(fill="x", padx=8, pady=3)
             self.nav_buttons[name] = button
 
-        ctk.CTkLabel(self.sidebar, text="●  Локальная система\nPython  /  Expert System",
-                     text_color=('#536B7A', '#7795A8'), font=("Segoe UI", 11), justify="left").pack(side="bottom", pady=24)
+        footer = SurfaceFrame(self.sidebar, fg_color=("#DDE7E5", "#17262A"), corner_radius=12)
+        footer.pack(side="bottom", fill="x", padx=16, pady=16)
+        ctk.CTkLabel(footer, text="●   Все данные на устройстве", text_color=("#356E60", "#85CBB4"),
+                     font=("Segoe UI", 11)).pack(padx=10, pady=12)
 
         self.navigate("Главная", self.home_page)
 
@@ -144,7 +157,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
         )
         self.problem.pack(anchor="w", padx=35, pady=15)
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Запустить диагностику",
             command=self.run_diagnostic,
@@ -206,7 +219,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
             variable = ctk.StringVar(value="unknown")
             self.fact_variables[fact] = variable
 
-            row = ctk.CTkFrame(
+            row = SurfaceFrame(
                 scroll,
                 fg_color="transparent"
             )
@@ -233,7 +246,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
                     fg_color=PURPLE
                 ).pack(side="left", padx=5)
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Запустить логический вывод",
             command=self.run_logic,

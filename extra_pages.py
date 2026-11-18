@@ -1,5 +1,6 @@
 
 import customtkinter as ctk
+from ui_components import MotionButton, SurfaceFrame
 import joblib
 import pandas as pd
 import json
@@ -13,8 +14,8 @@ from modules.ai_assistant import FEATURES, DIAGNOSES
 
 BASE_DIR = Path(__file__).resolve().parent
 
-PURPLE = "#7952E8"
-PANEL = ('#FFFFFF', '#151D2E')
+PURPLE = "#8057E6"
+PANEL = ('#FFFFFF', '#131927')
 
 
 class ExtraPages:
@@ -28,11 +29,11 @@ class ExtraPages:
 
         self.frame_system = FrameSystem()
 
-        search_row = ctk.CTkFrame(self.content, fg_color="transparent")
+        search_row = SurfaceFrame(self.content, fg_color="transparent")
         search_row.pack(fill="x", padx=35, pady=(0, 6))
         self.frame_search = ctk.CTkEntry(search_row, placeholder_text="Поиск фрейма по названию", width=350)
         self.frame_search.pack(side="left")
-        ctk.CTkButton(search_row, text="Найти", width=85, command=self.search_frames).pack(side="left", padx=8)
+        MotionButton(search_row, text="Найти", width=85, command=self.search_frames).pack(side="left", padx=8)
 
         self.frame_selector = ctk.CTkOptionMenu(
             self.content,
@@ -44,7 +45,7 @@ class ExtraPages:
             anchor="w", padx=35, pady=10
         )
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Показать свойства",
             command=self.show_frame,
@@ -83,7 +84,7 @@ class ExtraPages:
             anchor="w", padx=35, pady=5
         )
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Сохранить свойство",
             command=self.save_frame_property,
@@ -162,17 +163,17 @@ class ExtraPages:
 
         self.path_target = ctk.CTkOptionMenu(self.content, values=nodes, width=350, height=36)
         self.path_target.pack(anchor="w", padx=35, pady=4)
-        ctk.CTkButton(self.content, text="Найти путь между выбранными узлами",
+        MotionButton(self.content, text="Найти путь между выбранными узлами",
                       command=self.find_semantic_path, fg_color=('#7656AE', '#453379')).pack(anchor="w", padx=35, pady=4)
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Найти связанные объекты",
             command=self.find_connections,
             fg_color=PURPLE
         ).pack(anchor="w", padx=35, pady=10)
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Показать граф",
             command=self.show_graph,
@@ -234,7 +235,7 @@ class ExtraPages:
                 report = json.loads(report_path.read_text(encoding="utf-8"))
                 scores.append(f"{title}: {report['accuracy']:.2%}")
         ctk.CTkLabel(self.content, text="  •  ".join(scores) + "\nТест на синтетических данных без общих векторов с обучением.",
-                     text_color=('#53627B', '#99A8C2'), font=("Segoe UI", 12)).pack(anchor="w", padx=35, pady=(0, 6))
+                     text_color=('#53627B', '#99A6C1'), font=("Segoe UI", 12)).pack(anchor="w", padx=35, pady=(0, 6))
 
         self.classifier = self.ai_assistant.classifier
         self.neural_network = self.ai_assistant.neural_network
@@ -270,7 +271,7 @@ class ExtraPages:
                 fg_color=PURPLE
             ).pack(anchor="w", padx=15, pady=8)
 
-        ctk.CTkButton(
+        MotionButton(
             self.content,
             text="Сравнить модели",
             command=self.compare_models,
