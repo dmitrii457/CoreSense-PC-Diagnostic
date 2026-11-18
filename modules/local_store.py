@@ -2,13 +2,15 @@
 import json
 import os
 import sqlite3
+import sys
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 def data_directory():
-    return Path(os.environ.get("CORESENSE_DATA_DIR", os.environ.get("FIXAI_DATA_DIR", Path(__file__).resolve().parent.parent / "user_data")))
+    root = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
+    return Path(os.environ.get("CORESENSE_DATA_DIR", os.environ.get("FIXAI_DATA_DIR", root / "user_data")))
 
 
 class LocalStore:

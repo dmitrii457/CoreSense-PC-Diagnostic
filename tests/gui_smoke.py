@@ -53,6 +53,13 @@ try:
         time.sleep(0.02)
     assert not app._busy
     assert app.store.load_session(pending_id)['answer'], 'Background result was lost after navigation'
+    app.defense_page()
+    assert app.demo_session.next_question()["fact"] == "no_power_indicator"
+    app.answer_demo(True)
+    assert "R5" in app.demo_panels[1].get("1.0", "end")
+    app.start_demo("Не работает USB")
+    app.answer_demo(False)
+    assert app.demo_session.next_question()["fact"] == "usb_other_pc"
     assert not errors, errors
     print("GUI_SMOKE_OK")
 finally:

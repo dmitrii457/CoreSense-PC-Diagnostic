@@ -1,4 +1,5 @@
 from extra_pages import ExtraPages
+from defense_ui import DefenseUI
 from modern_ui import ModernUI
 from feature_ui import FeatureUI
 from modules.ai_assistant import AIAssistant
@@ -43,7 +44,7 @@ KNOWLEDGE_BASE = {
 }
 
 
-class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
+class CoreSense(DefenseUI, FeatureUI, ModernUI, ctk.CTk, ExtraPages):
 
     def __init__(self):
         super().__init__()
@@ -99,6 +100,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
     ("Семантическая сеть", self.semantic_page),
     ("Машинное обучение", self.ml_page),
     ("База знаний", self.knowledge_page),
+    ("Режим защиты", self.defense_page),
     ("О проекте", self.about_page),
     ("Настройки", self.settings_page)
 ]
@@ -109,7 +111,7 @@ class CoreSense(FeatureUI, ModernUI, ctk.CTk, ExtraPages):
         icons = {"Главная": "⌂", "Диагностика ПК": "◎", "ИИ-помощник": "✦", "История": "◷",
                  "Схема ПК": "▦", "Логический вывод": "⋈", "Фреймовая модель": "◇",
                  "Семантическая сеть": "⌘", "Машинное обучение": "◉", "База знаний": "▤",
-                 "О проекте": "ⓘ", "Настройки": "⚙"}
+                 "Режим защиты": "▣", "О проекте": "ⓘ", "Настройки": "⚙"}
         sections = {"Главная": "РАБОЧЕЕ ПРОСТРАНСТВО", "Логический вывод": "ЗНАНИЯ И МОДЕЛИ", "О проекте": "ПРИЛОЖЕНИЕ"}
         for name, command in pages:
             if name in sections:

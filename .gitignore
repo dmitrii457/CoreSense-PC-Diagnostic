@@ -4,5 +4,8 @@ __pycache__/
 .vscode/
 .pytest_cache/
 user_data/
+/build/
+/dist/
+/CoreSense.spec
 *.sqlite3
 *.sqlite3-journal
