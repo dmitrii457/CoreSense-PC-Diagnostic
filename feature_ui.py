@@ -85,9 +85,11 @@ class FeatureUI:
         body.grid_columnconfigure(0, weight=3)
         body.grid_columnconfigure(1, weight=2, minsize=300)
         body.grid_rowconfigure(0, weight=1)
-        self.ai_result = ctk.CTkTextbox(body, fg_color=SURFACE, text_color=TEXT,
+        result_card = self.result_card(body, "Результат диагностики")
+        result_card.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        self.ai_result = ctk.CTkTextbox(result_card, fg_color=SURFACE, text_color=TEXT,
                                         font=("Segoe UI", 13), wrap="word", corner_radius=14)
-        self.ai_result.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        self.ai_result.pack(fill="both", expand=True, padx=10, pady=(0, 10))
         self.dialog_panel = ctk.CTkScrollableFrame(body, fg_color=SURFACE, corner_radius=14)
         self.dialog_panel.grid(row=0, column=1, sticky="nsew")
         self._render_session()

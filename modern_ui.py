@@ -47,13 +47,6 @@ class ModernUI:
     def heading(self, title, subtitle):
         top = SurfaceFrame(self.content, fg_color="transparent")
         top.pack(fill="x", padx=32, pady=(25, 14))
-        breadcrumb = SurfaceFrame(top, fg_color="transparent")
-        breadcrumb.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(breadcrumb, text="CORESENSE   /   РАБОЧЕЕ ПРОСТРАНСТВО", text_color=MUTED,
-                     font=("Segoe UI", 10, "bold")).pack(side="left")
-        ctk.CTkLabel(breadcrumb, text="●  Локально", text_color=("#32735D", "#83CCB2"),
-                     fg_color=("#E7F1EB", "#16272A"), corner_radius=9,
-                     font=("Segoe UI", 10), width=90, height=24).pack(side="right")
         ctk.CTkLabel(top, text=title, font=("Segoe UI", 29, "bold"), text_color=TEXT,
                      anchor="w").pack(fill="x", pady=(0, 4))
         ctk.CTkLabel(top, text=subtitle, text_color=MUTED, font=("Segoe UI", 13),
@@ -61,21 +54,18 @@ class ModernUI:
 
     def home_page(self):
         self.clear_page()
-        self.heading("Всё начинается с понятного диагноза", "Опишите, что происходит. CoreSense поможет разобраться в симптомах и выбрать следующий шаг.")
-        hero = SurfaceFrame(self.content, fg_color=("#F0EBFC", "#1A1830"), corner_radius=24,
-                            border_color=("#DDD0F3", "#393052"))
-        hero.pack(fill="x", padx=32, pady=(6, 20))
+        hero = SurfaceFrame(self.content, fg_color=("#EEE9FA", "#211A35"), corner_radius=24,
+                            border_color=("#D9CDF4", "#45365E"))
+        hero.pack(fill="x", padx=32, pady=(30, 24))
         orbit_host = SurfaceFrame(hero, fg_color="transparent")
         orbit_host.pack(side="right", padx=(10, 28), pady=28)
         CoreOrbit(orbit_host, size=180).pack()
         left = SurfaceFrame(hero, fg_color="transparent")
         left.pack(side="left", fill="both", expand=True, padx=(28, 0), pady=25)
-        ctk.CTkLabel(left, text="✦  ВАШ ПОМОЩНИК ПО ДИАГНОСТИКЕ", text_color=ACCENT,
-                     font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        ctk.CTkLabel(left, text="Поймём причину.\nНайдём решение.", justify="left", text_color=TEXT,
-                     font=("Segoe UI", 33, "bold")).pack(anchor="w", pady=(12, 8))
-        ctk.CTkLabel(left, text="Проверки по шагам и объяснение каждого вывода.",
-                     text_color=MUTED, font=("Segoe UI", 12), wraplength=425,
+        ctk.CTkLabel(left, text="Диагностика ПК", justify="left", text_color=TEXT,
+                     font=("Segoe UI", 38, "bold")).pack(anchor="w", pady=(12, 8))
+        ctk.CTkLabel(left, text="Опиши симптомы, чтобы получить объяснение и план проверки.",
+                     text_color=MUTED, font=("Segoe UI", 14), wraplength=420,
                      justify="left").pack(anchor="w")
         actions = SurfaceFrame(left, fg_color="transparent")
         actions.pack(anchor="w", pady=(20, 0))
@@ -88,8 +78,6 @@ class ModernUI:
         title_row.pack(fill="x", padx=34, pady=(0, 10))
         ctk.CTkLabel(title_row, text="Инструменты системы", text_color=TEXT,
                      font=("Segoe UI", 18, "bold")).pack(side="left")
-        ctk.CTkLabel(title_row, text="Знания, которые можно проверить", text_color=MUTED,
-                     font=("Segoe UI", 11)).pack(side="right")
         row = SurfaceFrame(self.content, fg_color="transparent")
         row.pack(fill="x", padx=32)
         row.grid_columnconfigure((0, 1, 2), weight=1, uniform="tools")
@@ -112,8 +100,22 @@ class ModernUI:
                           command=lambda n=name, cb=callback: self.navigate(n, cb)).pack(fill="x", padx=12, pady=(0, 12))
             self.motion.animate(value, "counter", lambda p, target=value, total=number: target.configure(text=str(round(total*p))),
                                 500, delay=index*60)
-        ctk.CTkLabel(self.content, text="●  Запросы обрабатываются на устройстве. Историю можно продолжить в любое время.",
-                     text_color=MUTED, font=("Segoe UI", 11)).pack(anchor="w", padx=35, pady=20)
+        quick = SurfaceFrame(self.content, fg_color="transparent")
+        quick.pack(fill="x", padx=32, pady=18)
+        for label, page, callback in (
+            ("История диагностик", "История", self.history_page),
+            ("Режим защиты", "Режим защиты", self.defense_page),
+        ):
+            MotionButton(quick, text=label, width=165, fg_color=SOFT, text_color=TEXT,
+                         hover_color=("#E0D7F4", "#35304B"),
+                         command=lambda name=page, cb=callback: self.navigate(name, cb)).pack(side="left", padx=(0, 10))
+
+    def result_card(self, parent, title):
+        panel = SurfaceFrame(parent, fg_color=SURFACE)
+        ctk.CTkLabel(panel, text=title, text_color=TEXT, font=("Segoe UI", 15, "bold")).pack(
+            anchor="w", padx=16, pady=(12, 8)
+        )
+        return panel
 
     def animate_text(self, widget, text, duration=700):
         widget.configure(state="normal")

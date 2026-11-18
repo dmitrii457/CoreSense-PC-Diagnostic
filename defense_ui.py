@@ -2,7 +2,7 @@
 import customtkinter as ctk
 
 from modules.diagnostic_session import DiagnosticSession, FACT_LABELS
-from ui_components import MotionButton, SurfaceFrame, SURFACE
+from ui_components import MotionButton, SurfaceFrame, SURFACE, ACCENT, SOFT
 
 
 EXAMPLES = {
@@ -21,10 +21,13 @@ class DefenseUI:
         for label, prompt in EXAMPLES.items():
             MotionButton(controls, text=label, width=105,
                          command=lambda text=prompt: self.start_demo(text)).pack(side="left", padx=(0, 8))
-        self.demo_question = ctk.CTkLabel(self.content, text="", wraplength=700)
-        self.demo_question.pack(anchor="w", padx=32, pady=6)
-        replies = SurfaceFrame(self.content, fg_color="transparent")
-        replies.pack(fill="x", padx=32, pady=(0, 8))
+        prompt_card = SurfaceFrame(self.content, fg_color=SOFT)
+        prompt_card.pack(fill="x", padx=32, pady=(0, 12))
+        self.demo_question = ctk.CTkLabel(prompt_card, text="", wraplength=700,
+                                          text_color=ACCENT, justify="left", font=("Segoe UI", 15, "bold"))
+        self.demo_question.pack(anchor="w", padx=16, pady=(12, 6))
+        replies = SurfaceFrame(prompt_card, fg_color="transparent")
+        replies.pack(fill="x", padx=16, pady=(0, 12))
         self.demo_buttons = []
         for label, value in [("Да", True), ("Нет", False), ("Не знаю", None)]:
             button = MotionButton(replies, text=label, width=90, command=lambda answer=value: self.answer_demo(answer))
@@ -36,10 +39,9 @@ class DefenseUI:
         body.grid_rowconfigure(0, weight=1)
         self.demo_panels = []
         for column, title in enumerate(("Факты", "Цепочка вывода", "План проверки")):
-            panel = SurfaceFrame(body, fg_color=SURFACE)
+            panel = self.result_card(body, title)
             panel.grid(row=0, column=column, sticky="nsew", padx=4)
-            ctk.CTkLabel(panel, text=title, font=("Segoe UI", 15, "bold")).pack(anchor="w", padx=12, pady=8)
-            box = ctk.CTkTextbox(panel, wrap="word", width=100)
+            box = ctk.CTkTextbox(panel, wrap="word", width=100, fg_color=SURFACE, border_width=0, spacing3=4)
             box.pack(fill="both", expand=True, padx=10, pady=(0, 10))
             self.demo_panels.append(box)
         self.start_demo(EXAMPLES["Питание"])
@@ -58,7 +60,7 @@ class DefenseUI:
         _, trace = self.ai_assistant.production.forward_chain(session.facts)
         session.set_plan(self.ai_assistant.plan_category(session.question, session.facts))
         question = session.next_question()
-        self.demo_question.configure(text=session.question + "  /  " + (
+        self.demo_question.configure(text=session.question + "\n" + (
             question["prompt"] if question else "Уточнения завершены"))
         for button in self.demo_buttons:
             button.configure(state="normal" if question else "disabled")
